@@ -7,9 +7,11 @@
 
 mod generated;
 mod model;
+mod search;
 
 pub use generated::{EMOJIS, SHORTCODE_INDEX};
 pub use model::{Emoji, ImageData, SkinTone};
+pub use search::{search, SearchHit};
 
 #[cfg(test)]
 mod tests {

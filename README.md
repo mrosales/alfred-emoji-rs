@@ -18,7 +18,12 @@ implementation plan and current phase status.
 
 ## Status
 
-Phases 1–3 done. No search or Alfred output yet (Phase 4+).
+Phases 1–4 done. No Alfred script-filter output yet (Phase 5+).
+
+- `emoji_data::search(query)` does exact-shortcode lookup plus weighted
+  `nucleo` fuzzy search over shortcodes/keywords (SPEC.md §4). Benchmarked
+  at ~150µs/query over the full dataset in release mode — see
+  `crates/emoji-data/benches/search.rs`.
 
 - `cargo run -p xtask -- generate` refreshes
   `crates/emoji-data/src/generated.rs` from Unicode/gemoji/emojilib. The
