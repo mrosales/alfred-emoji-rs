@@ -18,12 +18,18 @@ implementation plan and current phase status.
 
 ## Status
 
-Phases 1–4 done. No Alfred script-filter output yet (Phase 5+).
+Phases 1–5 done. Packaging into a `.alfredworkflow` and manual in-Alfred
+validation are still open (Phase 6–7).
 
 - `emoji_data::search(query)` does exact-shortcode lookup plus weighted
   `nucleo` fuzzy search over shortcodes/keywords (SPEC.md §4). Benchmarked
   at ~150µs/query over the full dataset in release mode — see
   `crates/emoji-data/benches/search.rs`.
+- `alfred-emoji <query>` prints Alfred script filter JSON: paste by
+  default, ⌘ copies the character, ⌥ copies `:shortcode:`, `skin_tone`
+  env var selects the variant. Run it from the workspace root (or
+  wherever `images/` lives) so icon paths resolve. Try:
+  `cargo run -p alfred-emoji -- rocket`.
 
 - `cargo run -p xtask -- generate` refreshes
   `crates/emoji-data/src/generated.rs` from Unicode/gemoji/emojilib. The
