@@ -18,8 +18,15 @@ implementation plan and current phase status.
 
 ## Status
 
-Phases 1–5 done. Packaging into a `.alfredworkflow` and manual in-Alfred
-validation are still open (Phase 6–7).
+Phases 1–6 done. Manual in-Alfred validation is still open (Phase 7).
+
+- `cargo run -p xtask -- package` builds the release binary and zips it
+  with `info.plist` and `images/` into `dist/alfred-emoji-rs.alfredworkflow`
+  (run `generate`/`render-icons` first — package doesn't do that for you).
+  Idiomatic-Rust choice per PLAN.md: this is a `cargo-xtask` subcommand,
+  not a `justfile`/`mage` task, since the project already has an `xtask`
+  crate and cargo-xtask is the community-standard way to do build
+  automation without another tool on `$PATH`.
 
 - `emoji_data::search(query)` does exact-shortcode lookup plus weighted
   `nucleo` fuzzy search over shortcodes/keywords (SPEC.md §4). Benchmarked

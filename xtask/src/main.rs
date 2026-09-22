@@ -4,10 +4,13 @@
 //!   emoji-test.txt + gemoji + emojilib (Phase 2).
 //! - `render-icons`: rasterize `images/*.png` from the system emoji font
 //!   (Phase 3, macOS only — see render_icons.rs for why).
+//! - `package`: build the release binary and zip it with info.plist and
+//!   images/ into a .alfredworkflow bundle (Phase 6).
 //!
 //! Must be run from the workspace root (paths are relative to it).
 
 mod generate;
+mod package;
 
 #[cfg(target_os = "macos")]
 mod render_icons;
@@ -24,8 +27,9 @@ fn main() -> anyhow::Result<()> {
     match command.as_deref() {
         Some("generate") => generate::run(),
         Some("render-icons") => render_icons::run(),
+        Some("package") => package::run(),
         _ => {
-            eprintln!("usage: cargo run -p xtask -- <generate|render-icons>");
+            eprintln!("usage: cargo run -p xtask -- <generate|render-icons|package>");
             std::process::exit(2);
         }
     }
