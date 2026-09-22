@@ -1,0 +1,20 @@
+[package]
+name = "alfred-emoji"
+description = "Alfred 5 script filter for emoji search"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "alfred-emoji"
+path = "src/main.rs"
+
+[dependencies]
+emoji-data = { path = "../emoji-data" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lints]
+workspace = true

@@ -1,0 +1,6 @@
+/target
+/images
+*.alfredworkflow
+
+# macOS
+.DS_Store
