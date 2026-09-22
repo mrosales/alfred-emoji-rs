@@ -18,8 +18,18 @@ implementation plan and current phase status.
 
 ## Status
 
-Phase 1 (scaffolding) and Phase 2 (dataset generation) done. Run
-`cargo run -p xtask -- generate` to refresh `crates/emoji-data/src/generated.rs`
-from Unicode/gemoji/emojilib; the generated file is committed so normal
-builds don't need network access. No search or Alfred output yet
-(Phase 3+).
+Phases 1–3 done. No search or Alfred output yet (Phase 4+).
+
+- `cargo run -p xtask -- generate` refreshes
+  `crates/emoji-data/src/generated.rs` from Unicode/gemoji/emojilib. The
+  generated file is committed so normal builds don't need network access.
+- `cargo run -p xtask -- render-icons` (macOS only) rasterizes
+  `images/<unified>.png` for every emoji + skin-tone variant from the
+  locally installed Apple Color Emoji font. `images/` is gitignored — it's
+  a packaging-time asset, regenerated per release, same as the Go version.
+  Whichever macOS version generates the icons for an actual release should
+  be noted in that release's notes, since font glyph coverage (and
+  therefore which emoji get a real icon vs. no icon) depends on it —
+  the last local run used macOS 27.0 and produced 3,444 icons with 19
+  codepoints unsupported by that OS's font (mostly the newest Emoji 18
+  additions).

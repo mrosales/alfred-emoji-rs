@@ -9,9 +9,17 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+emoji-data = { path = "../crates/emoji-data" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 ureq = "2"
 
-[lints]
-workspace = true
+[build-dependencies]
+cc = "1"
+
+# xtask's render-icons command FFIs into a small CoreText helper
+# (native/render_emoji.c) — that boundary is inherently unsafe. Confined
+# to this dev-only tool; emoji-data/alfred-emoji keep the workspace's
+# `unsafe_code = "deny"` since neither has a reason to need it.
+[lints.rust]
+unsafe_code = "allow"

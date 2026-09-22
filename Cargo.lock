@@ -674,6 +674,8 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cc",
+ "emoji-data",
  "serde",
  "serde_json",
  "ureq",
