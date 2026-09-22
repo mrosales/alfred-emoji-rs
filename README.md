@@ -18,4 +18,8 @@ implementation plan and current phase status.
 
 ## Status
 
-Phase 1 (scaffolding) only — no dataset, search, or Alfred output yet.
+Phase 1 (scaffolding) and Phase 2 (dataset generation) done. Run
+`cargo run -p xtask -- generate` to refresh `crates/emoji-data/src/generated.rs`
+from Unicode/gemoji/emojilib; the generated file is committed so normal
+builds don't need network access. No search or Alfred output yet
+(Phase 3+).
