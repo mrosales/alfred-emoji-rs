@@ -1,6 +1,6 @@
 /target
 /images
-*.alfredworkflow
+/dist
 
 # macOS
 .DS_Store

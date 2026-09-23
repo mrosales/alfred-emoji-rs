@@ -30,6 +30,13 @@ contracts below matter, not just "make a release exist."
    is being rasterized (see README.md and the `refresh-emoji-data`
    skill) — CI only runs `clippy`/`test` (see `.github/workflows/ci.yml`),
    it doesn't build workflow bundles.
+4. **The shipped binary must be signed and notarized** (`xtask package
+   --sign`). Unsigned, a browser download of the release (which sets
+   macOS's `com.apple.quarantine` flag — the in-workflow `curl`-based
+   auto-updater never triggers this) hits a hard Gatekeeper rejection.
+   One-time signing-machine setup (Developer ID cert, notarytool
+   credentials, env var overrides) is documented in
+   `xtask/src/notarize.rs`'s header — read it there, not here.
 
 ## Procedure
 
@@ -76,20 +83,32 @@ test -d images || cargo run -p xtask -- render-icons
 cargo fmt --all
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo run -p xtask -- package
+cargo run -p xtask -- package --sign
 ```
 
-All four must succeed before continuing. `package` prints
-`wrote /…/dist/alfred-emoji-rs.alfredworkflow` — confirm that file now
-exists and is non-empty.
+All four must succeed before continuing. `--sign` waits on a real round
+trip to Apple's notary service (usually a few minutes) and prints
+`status: Accepted`; `package` then prints `wrote
+/…/dist/alfred-emoji-rs.alfredworkflow` — confirm that file now exists
+and is non-empty.
 
-Sanity-check the bundle actually carries the new version and a single
-binary:
+Verify the bundle carries the new version, a single binary, and a
+genuine Developer ID signature (`notarize.rs`'s header explains how a
+`cargo build` at the wrong point in the pipeline downgrades this to an
+ad-hoc one instead):
 
 ```bash
 unzip -p dist/alfred-emoji-rs.alfredworkflow info.plist | plutil -extract version raw -
 unzip -l dist/alfred-emoji-rs.alfredworkflow
+unzip -p dist/alfred-emoji-rs.alfredworkflow alfred-emoji > /tmp/alfred-emoji-check
+codesign -dvvv /tmp/alfred-emoji-check 2>&1 | grep -E "TeamIdentifier|Authority"
+rm /tmp/alfred-emoji-check
 ```
+
+`TeamIdentifier` must be the signing team's ID (not `not set`), and
+`Authority=Developer ID Application: …` must be present — if either is
+missing, the notarization didn't stick and the release will hit
+Gatekeeper for anyone who downloads it via browser.
 
 ### 5. Commit the version bump
 

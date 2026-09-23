@@ -1,5 +1,8 @@
 //! `xtask package`: build the release binary and zip it with `info.plist`
 //! and `images/` into a `.alfredworkflow` bundle (PLAN.md Phase 6).
+//! `--sign` additionally code-signs and notarizes the staged binary
+//! before zipping (see `notarize.rs`) — the shipped-release path, not the
+//! default, since it costs a real round trip to Apple's notary service.
 //!
 //! Deliberately does *not* run `generate`/`render-icons` itself — those
 //! are their own deliberate steps (see generate.rs's header), and running
@@ -12,12 +15,14 @@ use std::process::Command;
 
 use anyhow::{bail, Context, Result};
 
+use crate::build::{release_binary, BINARY_NAME};
+use crate::notarize::sign_and_notarize;
+
 const STAGING_DIR: &str = "target/package";
 const DIST_DIR: &str = "dist";
 const WORKFLOW_NAME: &str = "alfred-emoji-rs.alfredworkflow";
-const BINARY_NAME: &str = "alfred-emoji";
 
-pub fn run() -> Result<()> {
+pub fn run(sign: bool) -> Result<()> {
     if !Path::new("images").is_dir() {
         bail!(
             "images/ not found — run `cargo run -p xtask -- render-icons` first \
@@ -25,14 +30,7 @@ pub fn run() -> Result<()> {
         );
     }
 
-    eprintln!("building {BINARY_NAME} (release)");
-    let status = Command::new("cargo")
-        .args(["build", "--release", "-p", BINARY_NAME])
-        .status()
-        .context("running cargo build --release")?;
-    if !status.success() {
-        bail!("cargo build --release failed");
-    }
+    let binary = release_binary()?;
 
     let staging = Path::new(STAGING_DIR);
     if staging.exists() {
@@ -42,11 +40,14 @@ pub fn run() -> Result<()> {
 
     std::fs::copy("info.plist", staging.join("info.plist")).context("copying info.plist")?;
     copy_dir_recursive(Path::new("images"), &staging.join("images")).context("copying images/")?;
-    std::fs::copy(
-        format!("target/release/{BINARY_NAME}"),
-        staging.join(BINARY_NAME),
-    )
-    .context("copying release binary")?;
+    let staged_binary = staging.join(BINARY_NAME);
+    std::fs::copy(&binary, &staged_binary).context("copying release binary")?;
+
+    // Must stay here, on the staged copy, as the last thing that touches
+    // it before zipping — see notarize.rs's header for why.
+    if sign {
+        sign_and_notarize(&staged_binary)?;
+    }
 
     std::fs::create_dir_all(DIST_DIR).context("creating dist/")?;
     let workflow_path = Path::new(DIST_DIR)
