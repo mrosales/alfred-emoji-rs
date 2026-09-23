@@ -74,3 +74,15 @@ Open the workflow's configuration in Alfred Preferences and set the
 `skin_tone` variable to one of: (empty, for the default tone), `light`,
 `medium_light`, `medium`, `medium_dark`, or `dark`. It applies to every
 emoji that supports skin-tone variants.
+
+### Auto-update
+
+Typing `e` with no query checks, at most once a day, whether
+[the repo](https://github.com/mrosales/alfred-emoji-rs) has a newer
+release than the one installed. If so, an "Update available" row appears
+above the usual results — hit ↩ to download and install it (Alfred's own
+import prompt takes over from there). Releases are cut with the
+`cut-release` skill in `.claude/skills/`, which is also the contract for
+what `crates/alfred-emoji/src/update.rs` expects: a git tag `vX.Y.Z`
+matching `Cargo.toml`'s version, and exactly one `.alfredworkflow` asset
+per GitHub release.

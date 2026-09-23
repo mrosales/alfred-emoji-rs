@@ -5,11 +5,13 @@
 //! character, ⌥ copies the `:shortcode:` — see PLAN.md Phase 5.
 
 mod alfred;
+mod update;
 
 use std::path::Path;
 
 use alfred::{Icon, Item, Mod, Mods};
 use emoji_data::{search, Emoji, ImageData, SkinTone};
+use update::AvailableUpdate;
 
 const IMAGE_DIR: &str = "images";
 /// Alfred's own list UI is only comfortably scrollable so far; a broad
@@ -66,7 +68,36 @@ fn build_item(emoji: &Emoji, skin_tone: Option<SkinTone>) -> Item {
     }
 }
 
+/// `--update-check <repository>`: the detached background process
+/// `update::spawn_background_check` invokes on itself. Returns `true` when
+/// it handled the invocation (so `main` should stop rather than search).
+fn handle_update_check_subcommand() -> bool {
+    let mut args = std::env::args().skip(1);
+    if args.next().as_deref() != Some(update::CHECK_ARG) {
+        return false;
+    }
+    update::run_background_check(&args.next().unwrap_or_default());
+    true
+}
+
+fn build_update_item(update: &AvailableUpdate) -> Item {
+    Item {
+        uid: None,
+        title: format!("Update available: v{}", update.version),
+        subtitle: "↩ to download and install the new version".to_string(),
+        arg: Some(update.download_url.clone()),
+        valid: true,
+        icon: None,
+        variables: Some([("action", "install_update")].into()),
+        mods: None,
+    }
+}
+
 fn main() {
+    if handle_update_check_subcommand() {
+        return;
+    }
+
     let query = std::env::args().nth(1).unwrap_or_default();
     let skin_tone_raw = std::env::var("skin_tone").unwrap_or_default();
 
@@ -81,20 +112,29 @@ fn main() {
         }
     };
 
+    let mut items = Vec::new();
+    // Only on an empty query (i.e. right after typing the keyword) so an
+    // update notice doesn't compete with every search's results.
+    if query.is_empty() {
+        if let Some(available) =
+            update::check(env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_REPOSITORY"))
+        {
+            items.push(build_update_item(&available));
+        }
+    }
+
     let hits = search(&query);
     if hits.is_empty() {
-        alfred::print_items(vec![Item::message(
-            "No matching items",
-            "Try a different query?",
-        )]);
+        items.push(Item::message("No matching items", "Try a different query?"));
+        alfred::print_items(items);
         return;
     }
 
-    let items = hits
-        .into_iter()
-        .take(MAX_RESULTS)
-        .map(|hit| build_item(hit.emoji, skin_tone))
-        .collect();
+    items.extend(
+        hits.into_iter()
+            .take(MAX_RESULTS)
+            .map(|hit| build_item(hit.emoji, skin_tone)),
+    );
     alfred::print_items(items);
 }
 

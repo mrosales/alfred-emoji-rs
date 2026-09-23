@@ -44,6 +44,18 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>52A1FA33-C2DC-4066-BEC8-45603EEEFAD8</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>4DBB6C66-8064-4D01-B3BF-D1F6AFBF1023</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>9C7E1BCF-D0C2-421C-9FC7-19B50B56FE54</key>
 		<array>
@@ -171,6 +183,20 @@
 						<key>uid</key>
 						<string>5E7089BE-70A4-4B4F-A3A8-CE47AFCED92C</string>
 					</dict>
+					<dict>
+						<key>inputstring</key>
+						<string>{var:action}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>install_update</string>
+						<key>outputlabel</key>
+						<string>install_update</string>
+						<key>uid</key>
+						<string>4DBB6C66-8064-4D01-B3BF-D1F6AFBF1023</string>
+					</dict>
 				</array>
 				<key>elselabel</key>
 				<string>else</string>
@@ -201,6 +227,23 @@
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>4</integer>
+				<key>script</key>
+				<string>curl -fsSL "{query}" -o /tmp/alfred-emoji-rs-update.alfredworkflow &amp;&amp; open /tmp/alfred-emoji-rs-update.alfredworkflow</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>52A1FA33-C2DC-4066-BEC8-45603EEEFAD8</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>Emoji Lookup Workflow (Rust)
@@ -215,7 +258,14 @@ Set the `skin_tone` variable to one of:
 * medium_light
 * medium
 * medium_dark
-* dark</string>
+* dark
+
+Auto-update:
+
+Once a day, opening the workflow with an empty query checks
+github.com/mrosales/alfred-emoji-rs for a newer release. If one's
+available, an "Update available" row appears — hit ↩ to download and
+install it.</string>
 	<key>uidata</key>
 	<dict>
 		<key>1F26B4D6-FC9F-49D6-835A-400CAF196F4C</key>
@@ -253,6 +303,15 @@ Set the `skin_tone` variable to one of:
 			<integer>490</integer>
 			<key>ypos</key>
 			<integer>215</integer>
+		</dict>
+		<key>52A1FA33-C2DC-4066-BEC8-45603EEEFAD8</key>
+		<dict>
+			<key>note</key>
+			<string>Download the new .alfredworkflow and open it, which hands off to Alfred's own import prompt</string>
+			<key>xpos</key>
+			<integer>710</integer>
+			<key>ypos</key>
+			<integer>460</integer>
 		</dict>
 	</dict>
 	<key>variables</key>
