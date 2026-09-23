@@ -17,7 +17,8 @@ in sync — run it manually on a cadence that matches how the underlying
 sources actually change (roughly):
 
 - **Unicode/Emoji version bump**: happens about once a year, historically
-  around September. Worth checking a few times a year.
+  around September. Worth checking a few times a year. A bump only ships
+  if macOS's emoji font can already render it — see step 3.
 - **gemoji / emojilib alias curation**: both are maintained by hand and
   update on no fixed schedule. Worth checking after a new Emoji version
   ships (there's usually a lag before they add curated aliases for it —
@@ -26,7 +27,9 @@ sources actually change (roughly):
   previous OS couldn't render (check the "unsupported" list from the last
   `render-icons` run, or grep this repo's git log for prior run output),
   it's worth re-running `render-icons` to see if the new OS closed the
-  gap.
+  gap — and, if `EMOJI_TEST_URL` (`xtask/src/generate.rs`) is pinned
+  below `latest` because of a prior gap, whether it can go back to
+  tracking `latest`.
 
 Do not run this speculatively on every session — only when the user asks
 for a refresh, or when one of the triggers above is the explicit reason
@@ -70,22 +73,17 @@ warnings — include both in your report. Then:
 
 ```bash
 git diff --stat crates/emoji-data/src/generated.rs
-```
-
-For a meaningful summary (not just line counts), diff which emoji names
-were added/removed and which had their `shortcodes`/`keywords` arrays
-change:
-
-```bash
 git diff crates/emoji-data/src/generated.rs | grep -E '^[+-]\s+name:' | sort | uniq -c
 ```
 
-Call out specifically: newly-added emoji (a real Unicode/Emoji version
-bump), and any *fallback-only* entries from the previous run that now
-have real gemoji/emojilib coverage (i.e. upstream curation caught up —
-worth naming which ones in the summary).
+The second command shows which emoji names were added/removed and which
+had their `shortcodes`/`keywords` arrays change. Call out specifically:
+newly-added emoji (a real Unicode/Emoji version bump — treat this as
+provisional until step 3 confirms macOS can render it), and any
+*fallback-only* entries from the previous run that now have real
+gemoji/emojilib coverage (upstream curation caught up — name which ones).
 
-### 3. Re-render icons
+### 3. Re-render icons, and confirm any version bump is renderable
 
 ```bash
 cargo run -p xtask -- render-icons
@@ -93,10 +91,38 @@ cargo run -p xtask -- render-icons
 
 Compare the new `wrote N icons, M unsupported` line and the unsupported
 codepoint list against the previous run. If `M` dropped, name which
-codepoints gained icon support (that's the macOS-update payoff). If this
-is running on a different macOS version than last time, say so explicitly
-— it's the kind of fact that explains *why* coverage changed and belongs
-in the commit message (see README.md's existing note on this).
+codepoints gained icon support (the macOS-update payoff). If this is
+running on a different macOS version than last time, say so explicitly —
+it's the kind of fact that explains *why* coverage changed and belongs in
+the commit message (see README.md's existing note on this).
+
+**If step 2 picked up a Unicode/Emoji version bump**, cross-check its
+newly-added codepoints (the `+` lines under `image: ImageData { unified:
+...` in step 2's diff) against the `unsupported` list this step just
+printed.
+
+- **None of them are unsupported** — the installed macOS emoji font
+  already covers this Emoji version. Proceed; the dataset stays pointed
+  at `emoji/latest/` (`EMOJI_TEST_URL` in `xtask/src/generate.rs`).
+- **Any of them are unsupported** — this macOS version can't render this
+  Emoji release yet (this is what happened going into Emoji 18.0 on
+  2026-09-22: 9 new codepoints had no font glyph). Don't ship a version
+  bump macOS can't back: an icon gap for a brand-new emoji is harder to
+  tell apart from a broken render than a clean fallback-only entry. Pin
+  instead of shipping it:
+  1. `git checkout -- crates/emoji-data/src/generated.rs`, then edit
+     `EMOJI_TEST_URL` to the last fully-supported version. Unicode
+     doesn't always publish a `/Public/emoji/<version>/` archive for a
+     brand-new release, but the matching UCD release tree mirrors the
+     same file per-version — `curl -sI` it first to confirm it exists
+     and its `# Version:` line matches:
+     `https://unicode.org/Public/<major>.0.0/emoji/emoji-test.txt`
+  2. Redo step 2 and this step against the pinned URL; the diff should
+     now be empty (or match only what the pin intends).
+  3. State in the report which version got pinned and why, and that
+     `EMOJI_TEST_URL` should go back to tracking `latest` once a macOS
+     update ships that Emoji version's glyphs (see the macOS-update
+     trigger above).
 
 ### 4. Verify nothing broke
 
@@ -126,7 +152,9 @@ check beyond `cargo test`'s debug build).
 
 Summarize for the user:
 
-- Old vs. new Unicode/Emoji version (if changed).
+- Old vs. new Unicode/Emoji version (if changed), and whether it's
+  tracking `emoji/latest/` or pinned because macOS doesn't support the
+  newer one's glyphs yet (step 3).
 - Emoji added/removed, and any fallback-only entries that gained curated
   aliases.
 - Icon coverage change (count, and which codepoints if it's a short

@@ -182,11 +182,4 @@ mod tests {
         // `single`.
         assert_eq!(single, many, "expected max-of-terms, not sum-of-terms");
     }
-
-    #[test]
-    fn emoji_18_fallback_entry_is_fuzzy_searchable() {
-        let hits = search("pickl");
-        assert!(!hits.is_empty());
-        assert!(hits[0].emoji.shortcodes.contains(&"pickle"));
-    }
 }

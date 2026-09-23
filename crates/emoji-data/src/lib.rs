@@ -34,18 +34,6 @@ mod tests {
     }
 
     #[test]
-    fn emoji_18_fallback_entries_are_present_and_searchable() {
-        // These shipped in Emoji 18.0 (2026-09-16) and are new enough that
-        // gemoji/emojilib haven't curated aliases for them yet — PLAN.md §0
-        // says they should still resolve via the slugified-name fallback.
-        let idx = SHORTCODE_INDEX["pickle"];
-        assert_eq!(EMOJIS[idx as usize].category, "Food & Drink");
-
-        let idx = SHORTCODE_INDEX["cracking_face"];
-        assert_eq!(EMOJIS[idx as usize].category, "Smileys & Emotion");
-    }
-
-    #[test]
     fn skin_tone_variation_resolves_correct_image() {
         let idx = SHORTCODE_INDEX["wave"];
         let emoji = &EMOJIS[idx as usize];

@@ -10,7 +10,12 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
-const EMOJI_TEST_URL: &str = "https://unicode.org/Public/emoji/latest/emoji-test.txt";
+// Pinned to Emoji 17.0 rather than `/emoji/latest/` (currently Emoji 18.0):
+// macOS does not yet ship glyphs for Emoji 18 additions, so 18.0 codepoints
+// would render as fallback boxes. Unicode hasn't published a
+// `/Public/emoji/17.0/` archive yet, but the same file is mirrored under the
+// matching UCD release tree.
+const EMOJI_TEST_URL: &str = "https://unicode.org/Public/17.0.0/emoji/emoji-test.txt";
 const GEMOJI_URL: &str = "https://raw.githubusercontent.com/github/gemoji/master/db/emoji.json";
 const EMOJILIB_URL: &str =
     "https://raw.githubusercontent.com/muan/emojilib/main/dist/emoji-en-US.json";
