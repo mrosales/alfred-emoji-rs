@@ -29,6 +29,9 @@ pub fn run(sign: bool) -> Result<()> {
              (see PLAN.md Phase 3)"
         );
     }
+    if !Path::new("icon.png").is_file() {
+        bail!("icon.png not found — run `cargo run -p xtask -- icon` first");
+    }
 
     let binary = release_binary()?;
 
@@ -39,6 +42,7 @@ pub fn run(sign: bool) -> Result<()> {
     std::fs::create_dir_all(staging).context("creating staging directory")?;
 
     std::fs::copy("info.plist", staging.join("info.plist")).context("copying info.plist")?;
+    std::fs::copy("icon.png", staging.join("icon.png")).context("copying icon.png")?;
     copy_dir_recursive(Path::new("images"), &staging.join("images")).context("copying images/")?;
     let staged_binary = staging.join(BINARY_NAME);
     std::fs::copy(&binary, &staged_binary).context("copying release binary")?;

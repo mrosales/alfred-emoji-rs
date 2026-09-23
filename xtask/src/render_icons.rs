@@ -13,47 +13,18 @@
 //! packaging-time asset regenerated per release, not source.
 
 use std::collections::HashSet;
-use std::ffi::CString;
-use std::os::raw::{c_char, c_double, c_int};
+use std::os::raw::{c_double, c_int};
 use std::path::Path;
 use std::process::Command;
 
 use anyhow::{Context, Result};
 use emoji_data::EMOJIS;
 
+use crate::emoji_render::{render, RenderOutcome};
+
 const IMAGES_DIR: &str = "images";
 const CANVAS_PX: c_int = 144;
 const POINT_SIZE: c_double = 118.0;
-
-extern "C" {
-    fn render_emoji_png(
-        utf8_text: *const c_char,
-        point_size: c_double,
-        canvas_px: c_int,
-        out_path: *const c_char,
-    ) -> c_int;
-}
-
-enum RenderOutcome {
-    Written,
-    Unsupported,
-}
-
-fn render(character: &str, out_path: &Path) -> Result<RenderOutcome> {
-    let text = CString::new(character).context("emoji text contained a NUL byte")?;
-    let path = CString::new(out_path.to_string_lossy().as_bytes())
-        .context("output path contained a NUL byte")?;
-    // SAFETY: `render_emoji_png` (native/render_emoji.c) takes two
-    // borrowed, NUL-terminated C strings it only reads for the duration
-    // of the call, and two plain numeric args. Both CStrings outlive the
-    // call.
-    let rc = unsafe { render_emoji_png(text.as_ptr(), POINT_SIZE, CANVAS_PX, path.as_ptr()) };
-    match rc {
-        0 => Ok(RenderOutcome::Written),
-        1 => Ok(RenderOutcome::Unsupported),
-        _ => anyhow::bail!("render_emoji_png failed for {character:?} -> {out_path:?}"),
-    }
-}
 
 pub fn run() -> Result<()> {
     let macos_version = Command::new("sw_vers")
@@ -84,7 +55,7 @@ pub fn run() -> Result<()> {
             continue;
         }
         let out_path = Path::new(IMAGES_DIR).join(format!("{unified}.png"));
-        match render(character, &out_path) {
+        match render(character, POINT_SIZE, CANVAS_PX, &out_path) {
             Ok(RenderOutcome::Written) => written += 1,
             Ok(RenderOutcome::Unsupported) => unsupported.push(unified.to_string()),
             Err(e) => errors.push(format!("{unified}: {e}")),
